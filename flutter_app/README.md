@@ -47,11 +47,51 @@
 
 ## 📦 How to Build for Release
 
-### Android APK
+### Android Variations
 Inside the `flutter_app` directory:
+
+**1. Build All Variations (Fat APKs):**
 ```powershell
 flutter build apk --release
 ```
+
+**2. Build Specific Edition (e.g., Pro):**
+```powershell
+flutter build apk --flavor pro --release
+```
+
+**3. Build Split APKs (Architecture Specific):**
+```powershell
+flutter build apk --release --split-per-abi
+```
+#### Which file should I use?
+*   **`app-armeabi-v7a-release.apk` (32-bit)**: 
+    *   **Best for**: Older phones (Android 4.4 to 7.1) and low-end modern budget devices.
+    *   **Compatibility**: Works on almost all Android devices, but slightly slower on modern ones.
+*   **`app-arm64-v8a-release.apk` (64-bit)**: 
+    *   **Best for**: Modern phones (Android 8.0 and above). 
+    *   **Compatibility**: Much faster and optimized for 64-bit processors found in the last 5-6 years.
+*   **`app-x86_64-release.apk`**: 
+    *   **Best for**: Android Emulators on PCs.
+
+---
+
+## 🔄 Auto-Update Feature
+
+The app now automatically checks for updates on launch. To use this:
+
+1.  Create a file named `version.json` in your repository.
+2.  Add the following content:
+    ```json
+    {
+      "version": "1.0.1",
+      "url": "https://github.com/your-username/your-repo/releases/latest",
+      "changelog": "Performance improvements and bug fixes."
+    }
+    ```
+3.  Update the `UPDATE_URL` constant in `lib/main.dart` to point to the **raw** version of this JSON file.
+
+---
 
 ### Windows EXE
 Inside the `python_server` directory:

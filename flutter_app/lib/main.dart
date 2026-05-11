@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:io';
 import 'dart:convert';
 import 'dart:async';
+import 'package:http/http.dart' as http;
 
 void main() {
   runApp(const RemoteDrawingApp());
@@ -52,11 +53,77 @@ class _TouchPadScreenState extends State<TouchPadScreen> {
   bool _isManualDragActive = false;
   Offset? _previousPosition;
 
+  static const String APP_VERSION = "1.1.0";
+  // Replace this URL with your actual version JSON file (e.g. GitHub raw link)
+  static const String UPDATE_URL = "https://raw.githubusercontent.com/ahmedkhursheed2006/Remote-Trackpad/main/version.json";
+
   @override
   void initState() {
     super.initState();
     _initSocket();
     _discoverServer();
+    // Check for updates after a short delay
+    Timer(const Duration(seconds: 2), _checkForUpdates);
+  }
+
+  Future<void> _checkForUpdates() async {
+    try {
+      final response = await http.get(Uri.parse(UPDATE_URL)).timeout(const Duration(seconds: 5));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final latestVersion = data['version'];
+        final downloadUrl = data['url'];
+        final changelog = data['changelog'] ?? "No changelog provided.";
+
+        if (latestVersion != APP_VERSION) {
+          _showUpdateDialog(latestVersion, downloadUrl, changelog);
+        }
+      }
+    } catch (e) {
+      debugPrint("Update check failed: $e");
+    }
+  }
+
+  void _showUpdateDialog(String version, String url, String changelog) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1E1E1E),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            const Icon(Icons.system_update, color: Colors.deepPurpleAccent),
+            const SizedBox(width: 10),
+            const Text('Update Available'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('A new version ($version) is available!', style: const TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 10),
+            Text(changelog, style: const TextStyle(color: Colors.white70, fontSize: 13)),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('LATER', style: TextStyle(color: Colors.white38)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.deepPurpleAccent),
+            onPressed: () {
+              // Note: You might need url_launcher package to open the browser
+              // For now, we'll just show the link or close the dialog
+              Navigator.pop(context);
+            },
+            child: const Text('DOWNLOAD'),
+          ),
+        ],
+      ),
+    );
   }
   
   void _initSocket() async {
@@ -83,8 +150,23 @@ class _TouchPadScreenState extends State<TouchPadScreen> {
       Timer(const Duration(seconds: 3), () {
         discoverySocket.close();
         if (mounted) {
-          setState(() => _isSearching = false);
-          if (_foundServers.isNotEmpty) _showServerSelectionDialog();
+          setState(() {
+            _isSearching = false;
+            if (_ipController.text == 'Searching...') {
+              _ipController.clear();
+            }
+          });
+          if (_foundServers.isNotEmpty) {
+            _showServerSelectionDialog();
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('No servers found. Check if the Desktop Server is running and both devices are on the same Wi-Fi.'),
+                backgroundColor: Colors.redAccent,
+                duration: Duration(seconds: 5),
+              ),
+            );
+          }
         }
       });
 

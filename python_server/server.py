@@ -53,6 +53,17 @@ def discovery_listener():
         except:
             pass
 
+def get_local_ip():
+    try:
+        # Create a temporary socket to determine the local network interface IP
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        local_ip = s.getsockname()[0]
+        s.close()
+        return local_ip
+    except:
+        return "127.0.0.1"
+
 def start_server():
     global curr_smoothed_x, curr_smoothed_y
     threading.Thread(target=discovery_listener, daemon=True).start()
@@ -60,8 +71,12 @@ def start_server():
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.bind((UDP_IP, UDP_PORT))
     
+    local_ip = get_local_ip()
     print(f"--- Remote Trackpad Server (Liquid Motion Enabled) ---")
-    print(f"Server Name: {SERVER_NAME} | Port: {UDP_PORT}")
+    print(f"Server Name: {SERVER_NAME}")
+    print(f"Local IP:    {local_ip}")
+    print(f"Port:        {UDP_PORT}")
+    print(f"------------------------------------------------------")
     
     is_drawing = False
 
