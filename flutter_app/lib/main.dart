@@ -53,7 +53,7 @@ class _TouchPadScreenState extends State<TouchPadScreen> {
   bool _isManualDragActive = false;
   Offset? _previousPosition;
 
-  static const String APP_VERSION = "1.1";
+  static const String APP_VERSION = "1.1.0";
   // Replace this URL with your actual version JSON file (e.g. GitHub raw link)
   static const String UPDATE_URL = "https://raw.githubusercontent.com/ahmedkhursheed2006/Remote-Trackpad/main/version.json";
 
